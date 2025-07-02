@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>مصباح علاء الدين</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #1b0044;
+      --text-color: #fff;
+      --chat-bg: rgba(0, 0, 0, 0.4);
+      --button-bg: #d4af37;
+      --button-hover: #f7c948;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      direction: rtl;
+      background: url('https://i.imgur.com/AvL9F3C.jpeg') center/cover no-repeat fixed;
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 30px;
+      color: gold;
+      text-shadow: 0 0 10px #ffc107;
+      margin-bottom: 20px;
+      animation: fadeIn 2s ease-in-out;
+    }
+    #chat {
+      background-color: var(--chat-bg);
+      padding: 15px;
+      border-radius: 10px;
+      min-height: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      box-shadow: 0 0 15px var(--button-bg);
+    }
+    #input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 10px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    button, select {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: var(--button-bg);
+      color: #000;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover, select:hover {
+      background: var(--button-hover);
+    }
+    .genie-img {
+      width: 80px;
+      animation: float 3s infinite ease-in-out;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body onload="playIntro()">
+  <h1>🧞‍♂️ شُبِّك لُبِّيك... مصباحك بين إيديك!</h1>
+  <div id="chat"><img src="https://i.imgur.com/nkK1K5O.png" alt="genie" class="genie-img"></div>
+  <input type="text" id="input" placeholder="اكتب أمنيتك هنا...">
+  <div class="controls">
+    <button onclick="reply()">✨ إرسال</button>
+    <button onclick="clearChat()">🧹 مسح</button>
+    <button onclick="downloadChat()">📥 تحميل</button>
+    <select id="langSelect" onchange="setLanguage()">
+      <option value="ar">العربية</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <audio id="sendSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_f1f697f825.mp3?filename=click-124467.mp3"></audio>
+  <audio id="introSound" src="https://cdn.pixabay.com/download/audio/2023/03/19/audio_e6a0bc4a1f.mp3?filename=magical-transition-141100.mp3"></audio>
+  <script>
+    const chatBox = document.getElementById("chat");
+    const input = document.getElementById("input");
+    const sendSound = document.getElementById("sendSound");
+    const introSound = document.getElementById("introSound");
+    const langSelect = document.getElementById("langSelect");
+    let currentLang = "ar";
+    let synth = window.speechSynthesis;
+
+    function playIntro() {
+      introSound.play();
+    }
+
+    function reply() {
+      const userText = input.value.trim();
+      if (!userText) return;
+      chatBox.innerHTML += `<div><b>🧞‍♂️ أنت:</b> ${userText}</div>`;
+      sendSound.play();
+      let response = "أنا مصباح علاء الدين، ما هي أمنيتك؟";
+      if (currentLang === "en") {
+        if (userText.toLowerCase().includes("wish")) response = "Your wish is my command! ✨";
+        else response = "Tell me your wish!";
+      } else {
+        if (userText.includes("أمنيتي")) response = "قلها وسأحاول تحقيقها... ✨";
+        else if (userText.includes("شكرا")) response = "العفو! يومك سعيد! 🌟";
+      }
+      chatBox.innerHTML += `<div><b>✨ المصباح:</b> ${response}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+      input.value = "";
+      localStorage.setItem("chat", chatBox.innerHTML);
+      speak(response);
+    }
+
+    function clearChat() {
+      chatBox.innerHTML = "";
+      localStorage.removeItem("chat");
+    }
+
+    function downloadChat() {
+      const text = chatBox.innerText;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "chat.txt";
+      link.click();
+    }
+
+    function setLanguage() {
+      currentLang = langSelect.value;
+      localStorage.setItem("lang", currentLang);
+    }
+
+    function speak(text) {
+      if (!synth) return;
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = currentLang === "ar" ? "ar-SA" : "en-US";
+      synth.speak(utter);
+    }
+
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") reply();
+    });
+
+    window.onload = () => {
+      const savedChat = localStorage.getItem("chat");
+      const savedLang = localStorage.getItem("lang");
+      if (savedChat) chatBox.innerHTML += savedChat;
+      if (savedLang) { currentLang = savedLang; langSelect.value = currentLang; }
+    };
+  </script>
+</body>
+</html>
